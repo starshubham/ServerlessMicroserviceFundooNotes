@@ -30,7 +30,7 @@ namespace RepositoryLayer.Services
             {                
                 var user = new UserDetails()
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    UserId = Guid.NewGuid().ToString(),
                     FirstName = details.FirstName,
                     LastName = details.LastName,
                     Email = details.Email,
@@ -40,7 +40,7 @@ namespace RepositoryLayer.Services
                 };
 
                 var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
-                return await container.CreateItemAsync(user, new PartitionKey(user.Id.ToString()));              
+                return await container.CreateItemAsync(user, new PartitionKey(user.UserId.ToString()));              
             }
             catch (Exception ex)
             {
