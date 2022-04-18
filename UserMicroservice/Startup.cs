@@ -2,6 +2,8 @@
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RepositoryLayer.Interfaces;
+using RepositoryLayer.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,6 +33,8 @@ namespace UserMicroservice
                 return configurationBuilder
                         .Build();
             });
+
+            builder.Services.AddTransient<IUserRL, UserRL>();
         }            
     }
 }

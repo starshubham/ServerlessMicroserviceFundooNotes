@@ -1,6 +1,7 @@
 ﻿using CommonLayer.Models;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Documents.Client;
+using RepositoryLayer.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace RepositoryLayer.Services
 {
-    public class UserRL
+    public class UserRL : IUserRL
     {
         private readonly CosmosClient _cosmosClient;
         private readonly DocumentClient _client;
@@ -19,26 +20,27 @@ namespace RepositoryLayer.Services
             this._client = client;
         }
 
-        public async Task CreateUser(UserDetails details)
+        public async Task<UserDetails> CreateUser(UserDetails details)
         {
-            try
+            if (details == null)
             {
-                if (details != null)
+                throw new NullReferenceException();
+            }
+            try
+            {                
+                var user = new UserDetails()
                 {
-                    var user = new UserDetails()
-                    {
-                        Id = details.Id,
-                        FirstName = details.FirstName,
-                        LastName = details.LastName,
-                        Email = details.Email,
-                        Password = details.Password,
-                        ConfirmPassword = details.ConfirmPassword,
-                        CreatedAt = DateTime.Now
-                    };
+                    Id = Guid.NewGuid().ToString(),
+                    FirstName = details.FirstName,
+                    LastName = details.LastName,
+                    Email = details.Email,
+                    Password = details.Password,
+                    ConfirmPassword = details.ConfirmPassword,
+                    CreatedAt = DateTime.Now
+                };
 
-                    var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
-                    var result = await container.CreateItemAsync(user, new PartitionKey(user.Id.ToString()));
-                }
+                var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
+                return await container.CreateItemAsync(user, new PartitionKey(user.Id.ToString()));              
             }
             catch (Exception ex)
             {
