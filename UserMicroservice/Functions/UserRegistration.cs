@@ -15,7 +15,7 @@ namespace UserMicroservice.Functions
 {
     public class UserRegistration
     {
-        private IUserRL userRL;
+        private readonly IUserRL userRL;
 
         public UserRegistration(IUserRL userRL)
         {
@@ -35,7 +35,7 @@ namespace UserMicroservice.Functions
                 dynamic data = JsonConvert.DeserializeObject<UserDetails>(requestBody);
 
                 var result = await this.userRL.CreateUser(data);
-                return new OkObjectResult(result.Resource);
+                return new OkObjectResult(result);
 
             }
             catch (CosmosException cosmosException)
