@@ -86,31 +86,6 @@ namespace RepositoryLayer.Services
             }
         }
 
-
-        public async Task<List<UserDetails>> GetUsers()
-        {
-            try
-            {
-                var container = _cosmosClient.GetContainer("UserDB", "UserDetails");
-                using (var query = container.GetItemLinqQueryable<UserDetails>()
-                               .OrderByDescending(e => e.CreatedAt)
-                               .ToFeedIterator())
-                {
-                    List<UserDetails> allDocuments = new List<UserDetails>();
-                    while (query.HasMoreResults)
-                    {
-                        var queryResult = await query.ReadNextAsync();
-
-                        allDocuments.AddRange(queryResult.ToList());
-                    }
-
-                    return allDocuments;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message, ex);
-            }
-        }
+        
     }
 }

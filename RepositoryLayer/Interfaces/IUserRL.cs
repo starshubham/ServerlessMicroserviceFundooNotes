@@ -14,6 +14,5 @@ namespace RepositoryLayer.Interfaces
 
         LoginResponse UserLogin(LoginCredentials userLoginDetails);
 
-        Task<List<UserDetails>> GetUsers();
     }
 }
