@@ -1,9 +1,13 @@
-﻿using CommonLayer.Models;
+﻿
+using CommonLayer.RequestModels;
+using CommonLayer.ResponseModels;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Azure.Documents.Client;
 using RepositoryLayer.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,12 +16,12 @@ namespace RepositoryLayer.Services
     public class UserRL : IUserRL
     {
         private readonly CosmosClient _cosmosClient;
-        private readonly DocumentClient _client;
+        private readonly IJWTService _jWTService;
 
-        public UserRL(CosmosClient cosmosClient, DocumentClient client)
+        public UserRL(CosmosClient cosmosClient, IJWTService jWTService)
         {
             this._cosmosClient = cosmosClient;
-            this._client = client;
+            this._jWTService = jWTService;
         }
 
         public async Task<UserDetails> CreateUser(UserDetails details)
@@ -45,6 +49,67 @@ namespace RepositoryLayer.Services
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+
+        public LoginResponse UserLogin(LoginCredentials userLoginDetails)
+        {
+            try
+            {
+                var container = _cosmosClient.GetContainer("UserDB", "UserDetails");
+                var document = container.GetItemLinqQueryable<UserDetails>(true).Where(t => t.Email == userLoginDetails.Email)
+                        .AsEnumerable().FirstOrDefault();
+
+                if (document != null)
+                {
+
+                    LoginResponse loginResponse = new LoginResponse();
+                    loginResponse.userDetails = document;
+                    loginResponse.token = _jWTService.GetJWT(loginResponse.userDetails.UserId, loginResponse.userDetails.Email);
+                    return loginResponse;
+                }
+                return null;
+            }
+
+
+            catch (Exception ex)
+            {
+                // Detect a `Resource Not Found` exception...do not treat it as error
+                if (ex.InnerException != null && !string.IsNullOrEmpty(ex.InnerException.Message) && ex.InnerException.Message.IndexOf("Resource Not Found") != -1)
+                {
+                    return null;
+                }
+                else
+                {
+                    throw new Exception(ex.Message, ex);
+                }
+            }
+        }
+
+
+        public async Task<List<UserDetails>> GetUsers()
+        {
+            try
+            {
+                var container = _cosmosClient.GetContainer("UserDB", "UserDetails");
+                using (var query = container.GetItemLinqQueryable<UserDetails>()
+                               .OrderByDescending(e => e.CreatedAt)
+                               .ToFeedIterator())
+                {
+                    List<UserDetails> allDocuments = new List<UserDetails>();
+                    while (query.HasMoreResults)
+                    {
+                        var queryResult = await query.ReadNextAsync();
+
+                        allDocuments.AddRange(queryResult.ToList());
+                    }
+
+                    return allDocuments;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
             }
         }
     }
