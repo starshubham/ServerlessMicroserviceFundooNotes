@@ -1,4 +1,6 @@
-﻿using CommonLayer.Models;
+﻿
+using CommonLayer.RequestModels;
+using CommonLayer.ResponseModels;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,5 +11,9 @@ namespace RepositoryLayer.Interfaces
     public interface IUserRL
     {
         Task<UserDetails> CreateUser(UserDetails details);
+
+        LoginResponse UserLogin(LoginCredentials userLoginDetails);
+
+        Task<List<UserDetails>> GetUsers();
     }
 }

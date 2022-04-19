@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CommonLayer.Models
+namespace CommonLayer.RequestModels
 {
     public class UserDetails
     {
@@ -16,10 +16,10 @@ namespace CommonLayer.Models
         [JsonProperty("lastName")]
         public string LastName { get; set; }
 
-        [JsonProperty("email")]
+        [JsonProperty("Email")]
         public string Email { get; set; }
 
-        [JsonProperty("password")]
+        [JsonProperty("Password")]
         public string Password { get; set; }
 
         [JsonProperty("confirmPassword")]

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos.Fluent;
+using Microsoft.Azure.Documents;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,7 +35,10 @@ namespace UserMicroservice
                         .Build();
             });
 
+
             builder.Services.AddTransient<IUserRL, UserRL>();
+
+            builder.Services.AddSingleton<IJWTService, JWTService>();
         }            
     }
 }
