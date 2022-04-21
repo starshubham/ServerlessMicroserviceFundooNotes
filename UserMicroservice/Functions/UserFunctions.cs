@@ -23,12 +23,12 @@ namespace UserMicroservice
     public class UserFunctions
     {
         private readonly IUserRL userRL;
-        private readonly CosmosClient _cosmosClient;
+        private readonly IJWTService _jWTService;
 
-        public UserFunctions(IUserRL userRL, CosmosClient cosmosClient)
+        public UserFunctions(IUserRL userRL, IJWTService jWTService)
         {
             this.userRL = userRL;
-            this._cosmosClient = cosmosClient;
+            this._jWTService = jWTService;
         }
 
         [FunctionName("UserRegistration")]
@@ -77,38 +77,86 @@ namespace UserMicroservice
         [OpenApiOperation(operationId: "GetAllUsers", tags: new[] { "UserService" })]
         [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "email", In = OpenApiSecurityLocationType.Query)]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
-        public async Task<IActionResult> GetAllUsers(
+        public async Task<IActionResult> GetUsers(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetAll")] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            QueryDefinition query = new QueryDefinition("select * from UserDetails");
+            
+            var response = await this.userRL.GetUsers();
 
-            var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
-
-            List<UserDetails> userLists = new List<UserDetails>();
-            using (FeedIterator<UserDetails> resultSet = container.GetItemQueryIterator<UserDetails>(query))
-            {
-                while (resultSet.HasMoreResults)
-                {
-                    FeedResponse<UserDetails> response = await resultSet.ReadNextAsync();
-                    UserDetails user = response.First();
-                    log.LogInformation($"Id: {user.UserId};");
-                    if (response.Diagnostics != null)
-                    {
-                        Console.WriteLine($" Diagnostics {response.Diagnostics.ToString()}");
-                    }
-
-                    userLists.AddRange(response);
-
-                }
-            }
-
-            return new OkObjectResult(userLists);
+            return new OkObjectResult(response);
 
         }
 
+        [FunctionName("ForgetPassword")]
+        [OpenApiOperation(operationId: "ForgetPassword", tags: new[] { "UserService" })]
+        [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "email", In = OpenApiSecurityLocationType.Query)]
+        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ForgetPasswordDetails), Required = true, Description = "Forget Password details")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
+        public async Task<IActionResult> ForgetPassword(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "user/ForgetPassword")] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("C# HTTP trigger function processed a request.");
+
+            try
+            {
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                dynamic data = JsonConvert.DeserializeObject<ForgetPasswordDetails>(requestBody);
+
+                var result = this.userRL.ForgetPassword(data);
+                if (result != null)
+                {
+                    return new OkObjectResult(result);
+                }
+                return new BadRequestResult();
+            }
+            catch (CosmosException cosmosException)
+            {
+
+                log.LogError(" forget password failed with error {0}", cosmosException.ToString());
+                return new BadRequestObjectResult($"Failed to proced for forget password Cosmos Status Code {cosmosException.StatusCode}, Sub Status Code {cosmosException.SubStatusCode}: {cosmosException.Message}.");
+            }
+        }
+
+        [FunctionName("ResetPassword")]
+        [OpenApiOperation(operationId: "ResetPassword", tags: new[] { "UserService" })]
+        [OpenApiSecurity("BearerToken", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ResetPasswordDetails), Required = true, Description = "Reset Password details")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
+        public async Task<IActionResult> ResetPassword(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "user/ResetPassword")] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("C# HTTP trigger function processed a request.");
+
+            try
+            {
+                var authResponse = _jWTService.ValidateJWT(req);
+                if (!authResponse.IsValid)
+                {
+                    return new UnauthorizedResult();
+                }
+
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                dynamic data = JsonConvert.DeserializeObject<ResetPasswordDetails>(requestBody);
+
+                var result = this.userRL.ResetPassword(data);
+                if (result != null)
+                {
+                    return new OkObjectResult(result);
+                }
+                return new BadRequestResult();
+            }
+            catch (CosmosException cosmosException)
+            {
+
+                log.LogError(" forget password failed with error {0}", cosmosException.ToString());
+                return new BadRequestObjectResult($"Failed to proced for forget password Cosmos Status Code {cosmosException.StatusCode}, Sub Status Code {cosmosException.SubStatusCode}: {cosmosException.Message}.");
+            }
+        }
     }
 }
 

@@ -57,8 +57,9 @@ namespace RepositoryLayer.Services
             try
             {
                 var container = _cosmosClient.GetContainer("UserDB", "UserDetails");
-                var document = container.GetItemLinqQueryable<UserDetails>(true).Where(t => t.Email == userLoginDetails.Email)
-                        .AsEnumerable().FirstOrDefault();
+                var document = container.GetItemLinqQueryable<UserDetails>(true)
+                            .Where(t => t.Email == userLoginDetails.Email && t.Password == userLoginDetails.Password)
+                            .AsEnumerable().FirstOrDefault();
 
                 if (document != null)
                 {
@@ -86,6 +87,104 @@ namespace RepositoryLayer.Services
             }
         }
 
-        
+        public async Task<List<UserDetails>> GetUsers()
+        {
+            try
+            {
+                QueryDefinition query = new QueryDefinition("select * from UserDetails");
+
+                var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
+
+                List<UserDetails> userLists = new List<UserDetails>();
+                using (FeedIterator<UserDetails> resultSet = container.GetItemQueryIterator<UserDetails>(query))
+                {
+                    while (resultSet.HasMoreResults)
+                    {
+                        Microsoft.Azure.Cosmos.FeedResponse<UserDetails> response = await resultSet.ReadNextAsync();
+                        UserDetails user = response.First();
+
+                        userLists.AddRange(response);
+
+                    }
+                    return userLists;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
+        }
+
+        public string ForgetPassword(ForgetPasswordDetails details)
+        {
+            try
+            {
+                var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
+                var document = container.GetItemLinqQueryable<UserDetails>(true)
+                               .Where(b => b.Email == details.Email)
+                               .AsEnumerable()
+                               .FirstOrDefault();
+                if (document != null)
+                {
+
+                    var token = _jWTService.GetJWT(document.UserId.ToString(), document.Email.ToString());
+                    new MSMQ_Model().MSMQSender(token);
+                    return token;
+                }
+                return string.Empty;
+            }
+            catch (CosmosException ex)
+            {
+                throw new Exception(ex.Message);
+
+            }
+        }
+
+        public async Task<UserDetails> ResetPassword(ResetPasswordDetails details)
+        {
+            if (details == null)
+            {
+                throw new NullReferenceException();
+            }
+            try
+            {
+
+
+                if (details.Password.Equals(details.ConfirmPassword))
+                {
+                    var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
+                    var document = container.GetItemLinqQueryable<UserDetails>(true)
+                                   .Where(b => b.Email == details.Email)
+                                   .AsEnumerable()
+                                   .FirstOrDefault();
+
+                    if (document != null)
+                    {
+                        UserDetails user = new UserDetails();
+                        user.UserId = document.UserId;
+                        user.FirstName = document.FirstName;
+                        user.LastName = document.LastName;
+                        user.Email = document.Email;
+                        user.Password = details.Password;
+                        user.ConfirmPassword = document.ConfirmPassword;
+                        user.CreatedAt = document.CreatedAt;
+                        return await container.ReplaceItemAsync<UserDetails>(user, user.UserId);
+
+                        //ItemResponse<UserDetails> response = await container.ReadItemAsync<UserDetails>(document.UserId, new PartitionKey(document.UserId));
+                        //var itembody = response.Resource;
+                        //itembody.Password = details.Password;
+                        //itembody.CreatedAt = DateTime.Now;
+                        //response = await container.ReplaceItemAsync<UserDetails>(itembody, itembody.UserId, new PartitionKey(itembody.UserId));
+                        //return response.Resource;
+                    }
+                }
+                throw new NullReferenceException();
+            }
+            catch (CosmosException ex)
+            {
+                throw new Exception(ex.Message);
+
+            }
+        }
     }
 }

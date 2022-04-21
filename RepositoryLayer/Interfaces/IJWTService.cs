@@ -10,6 +10,7 @@ namespace RepositoryLayer.Interfaces
     {
         string GetJWT(string userId, string email);
 
-        JWTValidation ValidateJWT(HttpRequest req);
+        public JWTValidation ValidateJWT(HttpRequest request);
+
     }
 }
