@@ -31,7 +31,7 @@ namespace RepositoryLayer.Services
             {
                 // JSON representation of the user Reference with ID and Email
                 { "UserId", userId},
-                { "Email", email}
+                { "Email", email }
                 
                 // TODO: Add other claims here as necessary; maybe from a user database
             };
@@ -40,20 +40,20 @@ namespace RepositoryLayer.Services
             return token;
         }
 
-
         public JWTValidation ValidateJWT(HttpRequest request)
         {
+
             JWTValidation validationResponse = new JWTValidation();
 
             // Check if we have a header.
-            if (!request.Headers.ContainsKey("Authorization"))
+            if (!request.Headers.ContainsKey("token"))
             {
                 validationResponse.IsValid = false;
 
                 return validationResponse;
             }
 
-            string authorizationHeader = request.Headers["Authorization"];
+            string authorizationHeader = request.Headers["token"];
 
             // Check if the value is empty.
             if (string.IsNullOrEmpty(authorizationHeader))
@@ -88,7 +88,7 @@ namespace RepositoryLayer.Services
             }
 
             // Check if we have user claim.
-            if (!claims.ContainsKey("username"))
+            if (!claims.ContainsKey("UserId"))
             {
                 validationResponse.IsValid = false;
 
@@ -101,5 +101,6 @@ namespace RepositoryLayer.Services
 
             return validationResponse;
         }
+
     }
 }

@@ -36,10 +36,9 @@ namespace UserMicroservice
             });
 
 
-            builder.Services.AddTransient<IUserRL, UserRL>();
+            builder.Services.AddTransient<INoteRL, NoteRL>();
 
             builder.Services.AddSingleton<IJWTService, JWTService>();
-
         }            
     }
 }

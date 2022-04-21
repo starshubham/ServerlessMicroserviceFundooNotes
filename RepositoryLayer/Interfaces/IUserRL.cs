@@ -14,5 +14,10 @@ namespace RepositoryLayer.Interfaces
 
         LoginResponse UserLogin(LoginCredentials userLoginDetails);
 
+        Task<List<UserDetails>> GetUsers();
+
+        string ForgetPassword(ForgetPasswordDetails details);
+
+        Task<UserDetails> ResetPassword(ResetPasswordDetails details);
     }
 }
