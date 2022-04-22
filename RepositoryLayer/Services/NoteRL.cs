@@ -87,5 +87,52 @@ namespace RepositoryLayer.Services
 
             return note;
         }
+
+        public async Task<NoteModel> UpdateNote(string email, NoteModel updateNote, string noteId)
+        {
+            var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
+            var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
+                            .AsEnumerable().FirstOrDefault();
+
+            if (document != null)
+            {
+                document.Title = updateNote.Title;
+                document.Description = updateNote.Description;
+                document.Color = updateNote.Color;
+                document.BGImage = updateNote.BGImage;
+                document.ModifiedAt = DateTime.Now;
+                var response = await container.ReplaceItemAsync<NoteModel>(document, document.NoteId, new PartitionKey(document.NoteId));
+                return response.Resource;                
+            }
+            return null;
+        }
+
+        public bool Pin(string email, string noteId)
+        {
+            var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
+            var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
+                            .AsEnumerable().FirstOrDefault();
+
+            if (document.IsPin == true)
+            {
+                document.IsPin = false;
+                container.ReplaceItemAsync<NoteModel>(document, document.NoteId, new PartitionKey(document.NoteId));
+            }
+            return true;
+        }
+
+        public bool Archive(string email, string noteId)
+        {
+            var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
+            var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
+                            .AsEnumerable().FirstOrDefault();
+
+            if (document.IsArchive == true)
+            {
+                document.IsArchive = false;
+                container.ReplaceItemAsync<NoteModel>(document, document.NoteId, new PartitionKey(document.NoteId));
+            }
+            return true;
+        }
     }
 }

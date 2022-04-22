@@ -13,5 +13,11 @@ namespace RepositoryLayer.Interfaces
         Task<List<NoteModel>> GetAllNotes(string email);
 
         Task<NoteModel> GetNoteById(string email, string noteId);
+
+        Task<NoteModel> UpdateNote(string email, NoteModel updateNote, string noteId);
+
+        bool Pin(string email, string noteId);
+
+        bool Archive(string email, string noteId);
     }
 }
