@@ -3,7 +3,6 @@ using CommonLayer.RequestModels;
 using CommonLayer.ResponseModels;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
-using Microsoft.Azure.Documents.Client;
 using RepositoryLayer.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -100,8 +99,7 @@ namespace RepositoryLayer.Services
                 {
                     while (resultSet.HasMoreResults)
                     {
-                        Microsoft.Azure.Cosmos.FeedResponse<UserDetails> response = await resultSet.ReadNextAsync();
-                        UserDetails user = response.First();
+                        FeedResponse<UserDetails> response = await resultSet.ReadNextAsync();
 
                         userLists.AddRange(response);
 
@@ -170,12 +168,7 @@ namespace RepositoryLayer.Services
                         user.CreatedAt = document.CreatedAt;
                         return await container.ReplaceItemAsync<UserDetails>(user, user.UserId);
 
-                        //ItemResponse<UserDetails> response = await container.ReadItemAsync<UserDetails>(document.UserId, new PartitionKey(document.UserId));
-                        //var itembody = response.Resource;
-                        //itembody.Password = details.Password;
-                        //itembody.CreatedAt = DateTime.Now;
-                        //response = await container.ReplaceItemAsync<UserDetails>(itembody, itembody.UserId, new PartitionKey(itembody.UserId));
-                        //return response.Resource;
+                        
                     }
                 }
                 throw new NullReferenceException();

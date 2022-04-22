@@ -9,8 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-[assembly: FunctionsStartup(typeof(UserMicroservice.Startup))]
-namespace UserMicroservice
+[assembly: FunctionsStartup(typeof(NoteMicroservice.Startup))]
+namespace NoteMicroservice
 {
     public class Startup : FunctionsStartup
     {

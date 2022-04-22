@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CommonLayer.RequestModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
@@ -32,7 +33,62 @@ namespace NoteMicroservice
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(NoteModel), Required = true, Description = "New note details.")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
         public async Task<IActionResult> CreateNote(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "note/CreateNote")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "note/CreateNote")] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("C# HTTP trigger CreateNote function processed a request.");
+
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
+            {
+                return new UnauthorizedResult();
+            }
+
+            try
+            {
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+
+                var response = this.noteRL.CreateNote(data, authResponse.UserId);
+                return new OkObjectResult(response);
+            }
+            catch (CosmosException cosmosException)
+            {
+
+                log.LogError("Creating item failed with error {0}", cosmosException.ToString());
+                return new BadRequestObjectResult($"Failed to create item. Cosmos Status Code {cosmosException.StatusCode}, Sub Status Code {cosmosException.SubStatusCode}: {cosmosException.Message}.");
+            }
+            
+        }
+
+        [FunctionName("GetAllNotes")]
+        [OpenApiOperation(operationId: "GetAllNotes", tags: new[] { "NoteService" })]
+        [OpenApiSecurity("JWT Bearer Token", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
+        public async Task<IActionResult> GetAllNotes(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetAll")] HttpRequest req,
+            ILogger log)
+        {
+            log.LogInformation("C# HTTP trigger function processed a request.");
+
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
+            {
+                return new UnauthorizedResult();
+            }
+
+            var response = await this.noteRL.GetAllNotes(authResponse.Email);
+
+            return new OkObjectResult(response);
+        }
+
+        [FunctionName("GetNoteById")]
+        [OpenApiOperation(operationId: "GetNoteById", tags: new[] { "NoteService" })]
+        [OpenApiSecurity("JWT Bearer Token", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
+        public async Task<IActionResult> GetNoteById(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "note/{id}")] HttpRequest req, string id)
         {
             var authResponse = _jWTService.ValidateJWT(req);
             if (!authResponse.IsValid)
@@ -40,10 +96,8 @@ namespace NoteMicroservice
                 return new UnauthorizedResult();
             }
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+            var response = await this.noteRL.GetNoteById(authResponse.Email, id);
 
-            var response = this.noteRL.CreateNote(data, authResponse.Email);
             return new OkObjectResult(response);
         }
     }
