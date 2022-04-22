@@ -127,7 +127,7 @@ namespace UserMicroservice
         [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ResetPasswordDetails), Required = true, Description = "Reset Password details")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
         public async Task<IActionResult> ResetPassword(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "user/ResetPassword")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "user/ResetPassword")] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");

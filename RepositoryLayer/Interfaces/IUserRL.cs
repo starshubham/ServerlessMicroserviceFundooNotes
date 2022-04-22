@@ -18,6 +18,6 @@ namespace RepositoryLayer.Interfaces
 
         string ForgetPassword(ForgetPasswordDetails details);
 
-        Task<UserDetails> ResetPassword(ResetPasswordDetails details);
+        UserDetails ResetPassword(ResetPasswordDetails details);
     }
 }
