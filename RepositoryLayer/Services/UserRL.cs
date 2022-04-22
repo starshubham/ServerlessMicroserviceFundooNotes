@@ -138,7 +138,7 @@ namespace RepositoryLayer.Services
             }
         }
 
-        public async Task<UserDetails> ResetPassword(ResetPasswordDetails details)
+        public UserDetails ResetPassword(ResetPasswordDetails details)
         {
             if (details == null)
             {
@@ -146,29 +146,23 @@ namespace RepositoryLayer.Services
             }
             try
             {
-
-
                 if (details.Password.Equals(details.ConfirmPassword))
                 {
                     var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
-                    var document = container.GetItemLinqQueryable<UserDetails>(true)
-                                   .Where(b => b.Email == details.Email)
-                                   .AsEnumerable()
-                                   .FirstOrDefault();
+                    var document = container.GetItemLinqQueryable<UserDetails>(true).Where(b => b.Email == details.Email)
+                                   .AsEnumerable().FirstOrDefault();
 
                     if (document != null)
                     {
-                        UserDetails user = new UserDetails();
-                        user.UserId = document.UserId;
-                        user.FirstName = document.FirstName;
-                        user.LastName = document.LastName;
-                        user.Email = document.Email;
-                        user.Password = details.Password;
-                        user.ConfirmPassword = document.ConfirmPassword;
-                        user.CreatedAt = document.CreatedAt;
-                        return await container.ReplaceItemAsync<UserDetails>(user, user.UserId);
-
-                        
+                        document.Email = details.Email;
+                        document.Password = details.Password;
+                        document.ConfirmPassword = details.ConfirmPassword;
+                        document.ModifiedAt = DateTime.Now;
+                        using (var response = container.ReplaceItemAsync<UserDetails>(document, document.UserId, new PartitionKey(document.UserId)))
+                        {
+                            return response.Result.Resource;
+                        }
+                            
                     }
                 }
                 throw new NullReferenceException();

@@ -27,5 +27,8 @@ namespace CommonLayer.RequestModels
 
         [JsonProperty("createdAt")]
         public DateTime? CreatedAt { get; set; }
+
+        [JsonProperty("modifiedAt")]
+        public DateTime? ModifiedAt { get; set; }
     }
 }
