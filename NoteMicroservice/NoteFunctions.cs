@@ -88,7 +88,7 @@ namespace NoteMicroservice
         [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
         public async Task<IActionResult> GetNoteById(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "note/{id}")] HttpRequest req, string id)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "note/Get/{id}")] HttpRequest req, string id)
         {
             var authResponse = _jWTService.ValidateJWT(req);
             if (!authResponse.IsValid)
@@ -97,6 +97,72 @@ namespace NoteMicroservice
             }
 
             var response = await this.noteRL.GetNoteById(authResponse.Email, id);
+
+            return new OkObjectResult(response);
+        }
+
+
+        [FunctionName("UpdateNote")]
+        [OpenApiOperation(operationId: "UpdateNote", tags: new[] { "NoteService" })]
+        [OpenApiSecurity("JWT Bearer Token", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
+        [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(NoteModel), Required = true, Description = "Update note details.")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
+        public async Task<IActionResult> UpdateNote(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "note/Update/{id}")] HttpRequest req, string id)
+        {
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
+            {
+                return new UnauthorizedResult();
+            }
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+
+            var response = await this.noteRL.UpdateNote(authResponse.Email, data, id);
+
+            return new OkObjectResult(response);
+        }
+
+
+        [FunctionName("Pin")]
+        [OpenApiOperation(operationId: "Pin", tags: new[] { "NoteService" })]
+        [OpenApiSecurity("JWT Bearer Token", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
+        public async Task<IActionResult> Pin(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "note/Pin/{id}")] HttpRequest req, string id)
+        {
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
+            {
+                return new UnauthorizedResult();
+            }
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+
+            var response =  this.noteRL.Pin(authResponse.Email, id);
+
+            return new OkObjectResult(response);
+        }
+
+        [FunctionName("Archive")]
+        [OpenApiOperation(operationId: "Archive", tags: new[] { "NoteService" })]
+        [OpenApiSecurity("JWT Bearer Token", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
+        public async Task<IActionResult> Archive(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "note/Archive/{id}")] HttpRequest req, string id)
+        {
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
+            {
+                return new UnauthorizedResult();
+            }
+
+            var response = this.noteRL.Archive(authResponse.Email, id);
 
             return new OkObjectResult(response);
         }
