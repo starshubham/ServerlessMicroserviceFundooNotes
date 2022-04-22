@@ -7,27 +7,39 @@ namespace CommonLayer.RequestModels
 {
     public class NoteModel
     {
-        [JsonProperty("id")]
-        public string NoteId { get; set; } = "";
+        [JsonProperty("id", ReferenceLoopHandling = ReferenceLoopHandling.Ignore)]
+        public string NoteId { get; set; }
 
-        public string Title { get; set; } = "";
+        [JsonProperty("title")]
+        public string Title { get; set; }
 
-        public string Body { get; set; } = "";
+        [JsonProperty("description")]
+        public string Description { get; set; }
 
-        public bool IsTrash { get; set; } = false;
+        [JsonProperty("color")]
+        public string Color { get; set; }
 
-        public bool IsPinned { get; set; } = false;
+        [JsonProperty("bgImage")]
+        public string BGImage { get; set; }
 
-        public bool IsArchived { get; set; } = false;
+        [JsonProperty("isTrash")]
+        public bool IsTrash { get; set; }
 
-        public List<string> Collaborations { get; set; } = new List<string>();
+        [JsonProperty("isPin")]
+        public bool IsPin { get; set; }
 
-        public string CreatedAt { get; set; } = "";
+        [JsonProperty("isArchive")]
+        public bool IsArchive { get; set; }
 
-        public string ModifiedAt { get; set; } = "";
+        [JsonProperty("reminder")]
+        public DateTime? Reminder { get; set; }
 
-        public string Color { get; set; } = "";
+        [JsonProperty("createdAt")]
+        public DateTime? CreatedAt { get; set; }
 
-        public string BGImage { get; set; } = "";
+        [JsonProperty("modifiedAt")]
+        public DateTime? ModifiedAt { get; set; }
+
+        
     }
 }

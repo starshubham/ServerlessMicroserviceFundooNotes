@@ -8,6 +8,10 @@ namespace RepositoryLayer.Interfaces
 {
     public interface INoteRL
     {
-        Task<NoteModel> CreateNote(NoteModel noteModel, string email);
+        NoteModel CreateNote(NoteModel noteModel, string userId);
+
+        Task<List<NoteModel>> GetAllNotes(string email);
+
+        Task<NoteModel> GetNoteById(string email, string noteId);
     }
 }
