@@ -113,12 +113,20 @@ namespace RepositoryLayer.Services
             var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
                             .AsEnumerable().FirstOrDefault();
 
-            if (document.IsPin == true)
+            if(document != null)
             {
-                document.IsPin = false;
+                if (document.IsPin == true)
+                {
+                    document.IsPin = false;
+                }
+                else
+                {
+                    document.IsPin = true;
+                }
                 container.ReplaceItemAsync<NoteModel>(document, document.NoteId, new PartitionKey(document.NoteId));
+                return true;
             }
-            return true;
+            return false;
         }
 
         public bool Archive(string email, string noteId)
@@ -127,12 +135,63 @@ namespace RepositoryLayer.Services
             var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
                             .AsEnumerable().FirstOrDefault();
 
-            if (document.IsArchive == true)
+            if(document != null)
             {
-                document.IsArchive = false;
+                if (document.IsArchive == true)
+                {
+                    document.IsArchive = false;
+                }
+                else
+                {
+                    document.IsArchive = true;
+                }
                 container.ReplaceItemAsync<NoteModel>(document, document.NoteId, new PartitionKey(document.NoteId));
+                return true;
             }
-            return true;
+            return false;
+        }
+
+        public bool Trash(string email, string noteId)
+        {
+            var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
+            var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
+                            .AsEnumerable().FirstOrDefault();
+
+            if(document != null)
+            {
+                if (document.IsTrash == true)
+                {
+                    document.IsTrash = false;
+                }
+                else
+                {
+                    document.IsTrash = true;
+                }
+                container.ReplaceItemAsync<NoteModel>(document, document.NoteId, new PartitionKey(document.NoteId));
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> DeleteNote(string email, string noteId)
+        {
+            var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
+            var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
+                            .AsEnumerable().FirstOrDefault();
+
+            if (document.IsTrash == true)
+            {
+                using (ResponseMessage response = await container.DeleteItemStreamAsync(noteId, new PartitionKey(noteId)))
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            return false;
+
         }
     }
 }

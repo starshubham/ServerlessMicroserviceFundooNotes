@@ -90,6 +90,20 @@ namespace UserMicroservice
 
         }
 
+        [FunctionName("GetUserById")]
+        [OpenApiOperation(operationId: "GetUserById", tags: new[] { "UserService" })]
+        [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "email", In = OpenApiSecurityLocationType.Query)]
+        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
+        public async Task<IActionResult> GetUserById(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "user/Get/{id}")] HttpRequest req, string id)
+        {
+
+            var response = await this.userRL.GetUserById(id);
+
+            return new OkObjectResult(response);
+        }
+
         [FunctionName("ForgetPassword")]
         [OpenApiOperation(operationId: "ForgetPassword", tags: new[] { "UserService" })]
         [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "email", In = OpenApiSecurityLocationType.Query)]
