@@ -162,7 +162,54 @@ namespace NoteMicroservice
                 return new UnauthorizedResult();
             }
 
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+
             var response = this.noteRL.Archive(authResponse.Email, id);
+
+            return new OkObjectResult(response);
+        }
+
+        [FunctionName("Trash")]
+        [OpenApiOperation(operationId: "Trash", tags: new[] { "NoteService" })]
+        [OpenApiSecurity("JWT Bearer Token", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
+        public async Task<IActionResult> Trash(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "note/Trash/{id}")] HttpRequest req, string id)
+        {
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
+            {
+                return new UnauthorizedResult();
+            }
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+
+            var response = this.noteRL.Trash(authResponse.Email, id);
+
+            return new OkObjectResult(response);
+        }
+
+        [FunctionName("DeleteNote")]
+        [OpenApiOperation(operationId: "Delete", tags: new[] { "NoteService" })]
+        [OpenApiSecurity("JWT Bearer Token", SecuritySchemeType.ApiKey, Name = "token", In = OpenApiSecurityLocationType.Header)]
+        [OpenApiParameter(name: "id", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The id parameter")]
+        [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(NoteModel), Description = "The OK response")]
+        public async Task<IActionResult> DeleteNote(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "note/Delete/{id}")] HttpRequest req, string id)
+        {
+            var authResponse = _jWTService.ValidateJWT(req);
+            if (!authResponse.IsValid)
+            {
+                return new UnauthorizedResult();
+            }
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject<NoteModel>(requestBody);
+
+            var response = this.noteRL.DeleteNote(authResponse.Email, id);
 
             return new OkObjectResult(response);
         }

@@ -16,6 +16,8 @@ namespace RepositoryLayer.Interfaces
 
         Task<List<UserDetails>> GetUsers();
 
+        Task<UserDetails> GetUserById(string userId);
+
         string ForgetPassword(ForgetPasswordDetails details);
 
         UserDetails ResetPassword(ResetPasswordDetails details);

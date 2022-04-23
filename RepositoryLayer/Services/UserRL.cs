@@ -1,5 +1,4 @@
-﻿
-using CommonLayer.RequestModels;
+﻿using CommonLayer.RequestModels;
 using CommonLayer.ResponseModels;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
@@ -111,6 +110,14 @@ namespace RepositoryLayer.Services
             {
                 throw new Exception(ex.Message, ex);
             }
+        }
+
+        public async Task<UserDetails> GetUserById(string userId)
+        {
+            var container = this._cosmosClient.GetContainer("UserDB", "UserDetails");
+            UserDetails user = await container.ReadItemAsync<UserDetails>(userId, new PartitionKey(userId));
+
+            return user;
         }
 
         public string ForgetPassword(ForgetPasswordDetails details)

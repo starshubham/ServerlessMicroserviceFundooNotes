@@ -19,5 +19,9 @@ namespace RepositoryLayer.Interfaces
         bool Pin(string email, string noteId);
 
         bool Archive(string email, string noteId);
+
+        bool Trash(string email, string noteId);
+
+        Task<bool> DeleteNote(string email, string noteId);
     }
 }
