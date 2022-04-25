@@ -82,6 +82,11 @@ namespace RepositoryLayer.Services
 
         public async Task<NoteModel> GetNoteById(string email, string noteId)
         {
+            if (noteId == null)
+            {
+                throw new NullReferenceException();
+            }
+
             var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
             NoteModel note = await container.ReadItemAsync<NoteModel>(noteId, new PartitionKey(noteId));
 
@@ -90,6 +95,11 @@ namespace RepositoryLayer.Services
 
         public async Task<NoteModel> UpdateNote(string email, NoteModel updateNote, string noteId)
         {
+            if (noteId == null)
+            {
+                throw new NullReferenceException();
+            }
+
             var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
             var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
                             .AsEnumerable().FirstOrDefault();
@@ -109,6 +119,11 @@ namespace RepositoryLayer.Services
 
         public bool Pin(string email, string noteId)
         {
+            if (noteId == null)
+            {
+                throw new NullReferenceException();
+            }
+
             var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
             var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
                             .AsEnumerable().FirstOrDefault();
@@ -131,6 +146,11 @@ namespace RepositoryLayer.Services
 
         public bool Archive(string email, string noteId)
         {
+            if (noteId == null)
+            {
+                throw new NullReferenceException();
+            }
+
             var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
             var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
                             .AsEnumerable().FirstOrDefault();
@@ -153,6 +173,11 @@ namespace RepositoryLayer.Services
 
         public bool Trash(string email, string noteId)
         {
+            if (noteId == null)
+            {
+                throw new NullReferenceException();
+            }
+
             var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
             var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
                             .AsEnumerable().FirstOrDefault();
@@ -173,25 +198,25 @@ namespace RepositoryLayer.Services
             return false;
         }
 
-        public async Task<bool> DeleteNote(string email, string noteId)
+        public bool DeleteNote(string email, string noteId)
         {
+            if (noteId == null)
+            {
+                throw new NullReferenceException();
+            }
+
             var container = this._cosmosClient.GetContainer("NoteDB", "NoteContainer");
             var document = container.GetItemLinqQueryable<NoteModel>(true).Where(b => b.NoteId == noteId)
                             .AsEnumerable().FirstOrDefault();
-
+            
             if (document.IsTrash == true)
             {
-                using (ResponseMessage response = await container.DeleteItemStreamAsync(noteId, new PartitionKey(noteId)))
-                {
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return true;
-                    }
-                    return false;
-                }
+                container.DeleteItemAsync<NoteModel>(noteId, new PartitionKey(noteId));
+                return true;
             }
             return false;
-
         }
+
+
     }
 }

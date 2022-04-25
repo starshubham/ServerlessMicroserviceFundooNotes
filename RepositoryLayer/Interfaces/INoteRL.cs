@@ -1,4 +1,5 @@
 ﻿using CommonLayer.RequestModels;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,6 +23,7 @@ namespace RepositoryLayer.Interfaces
 
         bool Trash(string email, string noteId);
 
-        Task<bool> DeleteNote(string email, string noteId);
+        bool DeleteNote(string email, string noteId);
+
     }
 }

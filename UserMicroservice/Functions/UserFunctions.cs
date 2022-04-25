@@ -78,7 +78,7 @@ namespace UserMicroservice
         [OpenApiSecurity("function_key", SecuritySchemeType.ApiKey, Name = "email", In = OpenApiSecurityLocationType.Query)]
         [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(string), Description = "The OK response")]
         public async Task<IActionResult> GetUsers(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "GetAll")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "user/GetAll")] HttpRequest req,
             ILogger log)
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
